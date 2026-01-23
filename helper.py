@@ -47,6 +47,7 @@ from matrix_operations import * #matrix operations
 import os
 from simulate_eeg import AVAILABLE_SIMULATIONS, NULL_SIMULATION_TAGS, simulation_parameters, sample_eeg
 
+bands = {"alpha": (8,12), "theta": (3, 9)}
 
 beh_to_event_windows = {'en': [250-1000, 1250+1000],
                      'en_all': [250-1000, 1250+1000],
@@ -763,8 +764,7 @@ def regionalize_electrode_connectivities(elsymx):
 
     return regsymx 
 
-def run_pipeline(dfrow, beh, events, save_dir, simulation_tag=None):
-    
+def run_pipeline(dfrow, band_name, beh, events, save_dir, simulation_tag=None):
     '''
     Runs the analysis pipeline for phase synchrony effects.
     
@@ -784,20 +784,28 @@ def run_pipeline(dfrow, beh, events, save_dir, simulation_tag=None):
         regsymx : xarray.DataArray
             Region-by-region synchrony effects matrix.
     '''
-    
-    freqs = np.arange(3, 9)
-    if ex(join(save_dir, 'regsymxs', f'{ftag(dfrow)}_regsymx.pkl')): return
-    
+    os.makedirs(join(save_dir,'elsymxs',band_name), exist_ok=True)
+    os.makedirs(join(save_dir,'regsymxs',band_name), exist_ok=True)
+
+    out_el = join(save_dir,'elsymxs',band_name,f'{ftag(dfrow)}_elsymx.npy')
+    out_rg = join(save_dir,'regsymxs',band_name,f'{ftag(dfrow)}_regsymx.pkl')
+
+    if os.path.exists(out_el) and os.path.exists(out_rg):
+        return
+
+    freqs = {'theta': np.arange(3,9),
+             'alpha': np.arange(8,13),
+             'beta': np.arange(20,50,10),
+             'gamma': np.arange(80,175,10)}[band_name]
+
     elsymx = get_elsymx(dfrow, freqs, events, simulation_tag=simulation_tag)
-    np.save(join(save_dir, 'elsymxs', f'{ftag(dfrow)}_elsymx.npy'), elsymx)
-    
+    np.save(out_el, elsymx)
+
     pairs = get_pairs(dfrow)
     localization = get_localization(dfrow)
-    regionalizations = regionalize_electrodes(pairs, localization)
-     
-    elsymx_regs = add_regions_elsymx(elsymx, regionalizations, freqs, beh)
+    elsymx_regs = add_regions_elsymx(elsymx, regionalize_electrodes(pairs, localization), freqs, beh)
     regsymx = regionalize_electrode_connectivities(elsymx_regs)
-    save_pickle(join(save_dir, 'regsymxs', f'{ftag(dfrow)}_regsymx.pkl'), regsymx)
+    save_pickle(out_rg, regsymx)
     return regsymx
     
 def cohens_d(x, y):
@@ -952,7 +960,9 @@ def run_pipeline_power(dfrow, band_name, beh, events, save_dir, simulation_tag=N
     if ex(join(save_dir, 'regpomxs', band_name, f'{ftag(dfrow)}_regpomx.pkl')): return
 
     band_name_to_freqs = {'theta': np.arange(3, 9),
-                          'gamma': np.arange(45, 100, 5)}
+                          'alpha': np.arange(8, 13),
+                          'beta': np.arange(20, 50, 10),
+                          'gamma': np.arange(80, 175, 10)}
     freqs = band_name_to_freqs[band_name]
 
     elpomx = comp_elpomx(dfrow, freqs, events, simulation_tag=simulation_tag)
@@ -968,7 +978,6 @@ def run_pipeline_power(dfrow, band_name, beh, events, save_dir, simulation_tag=N
 
         np.save(join(save_dir, 'elpomxs', band_name, f'{ftag(dfrow)}_elpomx{k}.npy'), elpomx[k])
         save_pickle(join(save_dir, 'regpomxs', band_name, f'{ftag(dfrow)}_regpomx{k}.pkl'), regpomx[k])
-
 
 def replace_w_simulated_EEG(original_eeg,
                             dfrow,
