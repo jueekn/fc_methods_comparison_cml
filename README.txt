@@ -1,14 +1,3 @@
-"Synchronous theta networks characterize successful memory retrieval"
-
-Rao AM, DeHaan RD, and Kahana MJ
-2024-12-06
-
-This file is a description of this research project's codebase, and contains useful information on navigating the code.
-
-___TIPS___
-
-- At the time of the writing of this code, the cmlreaders and ptsa packages were used to load behavioral events, electrode, localization, regionalization, and EEG data. However, the free recall datasets (catFR1, FR1, and pyFR) that were analyzed in this study have since been migrated to the OpenNeuro platform, where they are available in the Brain Imaging Data Structure (BIDS) standard format.
-
 - Set the root_dir variable in helper.py to specify the root directory, which is the directory to which the pipeline will write files and from which it will read files.
 
 - WholeBrainConnectivityPPCRevision.ipynb contains all the cells needed to create the directory structure within the root directory that the pipeline requires to run. It also contains cells that delete these directories and their files. To avoid inadvertent deletions, it is recommended that you leave the code that deletes files and directories commented out when not in use.
@@ -30,11 +19,6 @@ en: encoding. That is, the behavioral contrast between subsequently recalled and
 en_all: encoding with all items. That is, the behavioral contrast between ALL subsequently recalled and not-recalled encoding items, NOT matched by serial position. There are almost always many more not-recalled encoding items than recalled encoding items.
 rm: retrieval/matched deliberation. That is, the behavioral contrast between correct recalls and periods of silence, matched by time during the memory task's recall window.
 ri: retrieval/intrusion. That is, the behavioral contrast between correct recalls and intrusions, matched by time during the memory task's recall window.
-
-elsymx: electrode-by-electrode synchrony effects matrix
-regsymx: electrode-by-electrode synchrony effects matrix
-elpomx: electrode-wise power effects matrix
-regpomx: region-wise power effects matrix
 
 ___DESCRIPTION OF FILES___
 
